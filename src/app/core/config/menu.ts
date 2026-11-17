@@ -5,6 +5,7 @@ export interface MenuItem {
   hijos?: MenuItem[];
   permisos?: string[];
   soloActiva?: boolean;
+  soloGerencia?: boolean;
 }
 
 export const MENU: MenuItem[] = [
@@ -25,6 +26,12 @@ export const MENU: MenuItem[] = [
     icono: "settings",
     hijos: [
       {
+        etiqueta: 'Sistema',
+        ruta: '/configuraciones/sistema',
+        icono: 'settings',
+        soloGerencia: true,
+      },
+      {
         etiqueta: "Habitaciones",
         ruta: "/configuraciones/habitaciones",
         icono: "bed",
@@ -44,6 +51,7 @@ export const MENU: MenuItem[] = [
       },
     ],
   },
+  { etiqueta: 'Reportes', ruta: '/reportes', icono: 'receipt', soloGerencia: true },
   { etiqueta: "Informes y habitaciones", ruta: "/limpieza", icono: "receipt",
     permisos: ["LIMPIEZA:VER_INICIO", "LIMPIEZA:VER_HABITACIONES", "LIMPIEZA:VER_INFORMES", "LIMPIEZA:VER_TICKETS"] },
   { etiqueta: "Seguridad", ruta: "/seguridad", icono: "settings", soloActiva: true,

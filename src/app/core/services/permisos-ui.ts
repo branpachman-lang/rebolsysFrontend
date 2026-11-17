@@ -5,6 +5,11 @@ import type { SesionActual } from "./sesion-service";
 export class PermisosUi {
   readonly actual = signal<SesionActual | null>(null);
 
+  esGerente() {
+    const sesion = this.actual();
+    return sesion?.modo === 'ACTIVA' && !sesion.requiereCambio && sesion.gerente === true;
+  }
+
   permite(...permisos: string[]) {
     const s = this.actual();
     return !!s && !s.requiereCambio && (s.gerente || s.modo === "PRUEBA" ||

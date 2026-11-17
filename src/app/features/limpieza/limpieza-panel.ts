@@ -93,6 +93,11 @@ export class LimpiezaPanel {
   }
 
   permite(accion: string) { return this.acceso.permite("LIMPIEZA:" + accion); }
+  private readonly rolMantenimiento = computed(() => {
+    const sesion = this.acceso.actual();
+    return sesion?.modo === 'PRUEBA' || sesion?.roles?.includes('MANTENIMIENTO') === true;
+  });
+  puedeMantenimiento(accion: string) { return this.rolMantenimiento() && this.permite(accion); }
   texto(estado: string | null) { return estado ? (ETIQUETAS[estado] ?? estado) : "—"; }
   fecha(valor: string | null) { return valor ? valor.slice(0, 16).replace("T", " · ") : "—"; }
   foto(evidencia: Evidencia | null) {

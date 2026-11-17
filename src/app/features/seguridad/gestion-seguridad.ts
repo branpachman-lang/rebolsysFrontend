@@ -146,10 +146,13 @@ export class GestionSeguridad {
           () => { this.modo.set(null); this.aviso.set("Usuario actualizado."); this.cargar(); });
         break;
       case "rol": {
-        const datos = { nombre: this.nombre.trim(), permisos };
-        const solicitud = this.idEdicion === null ? this.http.post(this.base + "/roles", datos)
-          : this.http.put(this.base + "/roles/" + this.idEdicion, datos);
-        this.ejecutar(solicitud, () => { this.modo.set(null); this.aviso.set("Rol guardado."); this.cargar(); });
+        const id = this.idEdicion;
+        if (id === null) return;
+        this.ejecutar(this.http.put<Rol>(this.base + "/roles/" + id, { permisos }), actualizado => {
+          this.roles.update(lista => lista.map(rol => rol.idRol === id ? actualizado : rol));
+          this.modo.set(null);
+          this.aviso.set("Permisos del rol actualizados.");
+        });
         break;
       }
     }
@@ -178,15 +181,6 @@ export class GestionSeguridad {
     });
     if (activo) ejecutar();
     else this.confirmacion.set({ titulo: "Dar de baja al empleado", texto: "Se conservará su historial y se desactivará su usuario si tiene uno.", ejecutar });
-  }
-
-  eliminarRol(rol: Rol) {
-    this.confirmacion.set({ titulo: "Eliminar rol", texto: "Se eliminará el rol " + rol.nombre + " y su configuración de permisos.",
-      ejecutar: () => this.ejecutar(this.http.delete(this.base + "/roles/" + rol.idRol), () => {
-        this.aviso.set("Rol eliminado.");
-        this.cargar();
-      }),
-    });
   }
 
   confirmarAccion() {

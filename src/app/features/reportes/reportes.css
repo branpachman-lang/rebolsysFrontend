@@ -1,0 +1,23 @@
+:host { display: block; }
+.opciones { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.filtros { display: flex; flex-wrap: wrap; align-items: end; gap: .75rem 1rem; margin-block: 1rem; padding: 1rem; }
+.filtros .field { flex: 1 1 145px; }
+.opcion-check { display: flex; align-items: center; gap: .5rem; padding-block: .5rem; }
+.resultado { margin-block: 1rem; }
+.cabecera { padding: 1rem; display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
+.cabecera h3 { margin: .5rem 0; }
+.cabecera p { margin: 0; }
+.numero { text-align: right; white-space: nowrap; }
+.totales { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: .75rem; padding: 0 1rem; }
+.totales div { background: var(--lavanda); border-radius: .5rem; padding: .75rem; }
+.totales dd { margin: .35rem 0 0; font-weight: 700; }
+.alerta { color: var(--danger, #a82319); }
+.paginacion { justify-content: end; padding: 1rem; }
+.solo-impresion { display: none; }
+@media print {
+  .no-print { display: none !important; }
+  .resultado { margin: 0; overflow: visible; }
+  .solo-impresion { display: inline; }
+  .table-scroll { overflow: visible; }
+  tr { break-inside: avoid; }
+}

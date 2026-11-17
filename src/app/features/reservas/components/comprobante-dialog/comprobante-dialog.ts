@@ -17,6 +17,7 @@ import { mensajeError } from "../../../../core/utils/http-error";
 import { fechaLocal } from "../../../../core/utils/fechas";
 import { DialogFocus } from "../../../../shared/directives/dialog-focus";
 import { Icon } from "../../../../shared/components/icono/icono";
+import { MarcaHospedaje } from '../../../../shared/components/marca-hospedaje/marca-hospedaje';
 import { ClienteService } from "../../../clientes/services/cliente-service";
 import { ClienteDatos } from "../../../clientes/models/cliente.model";
 import { CuentaDocumento } from "../../models/reserva-api.model";
@@ -26,7 +27,7 @@ import { ComprobanteService } from "../../services/comprobante-service";
 
 @Component({
   selector: "app-comprobante-dialog",
-  imports: [FormsModule, CurrencyPipe, DatePipe, DialogFocus, Icon],
+  imports: [FormsModule, CurrencyPipe, DatePipe, DialogFocus, Icon, MarcaHospedaje],
   templateUrl: "./comprobante-dialog.html",
   styleUrl: "./comprobante-dialog.css",
 })

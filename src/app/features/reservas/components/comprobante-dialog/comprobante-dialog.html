@@ -43,6 +43,7 @@
       >
     </div>
     @if(documento();as doc){
+    <app-marca-hospedaje [mostrarSinConfigurar]="true" />
     <p class="receipt-number">
       <strong>{{doc.tipo}} {{doc.serie}}-{{doc.numero}}</strong>
     </p>

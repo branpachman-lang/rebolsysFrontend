@@ -8,6 +8,10 @@ import { PermisosUi } from '../../core/services/permisos-ui';
   imports: [RouterLink, RouterLinkActive, RouterOutlet, Icon],
   template: `
     <nav class="maintenance-tabs" aria-label="Secciones de mantenimiento">
+      @if (acceso.esGerente()) {
+        <a routerLink="sistema" routerLinkActive="active" ariaCurrentWhenActive="page"
+          ><app-icon name="settings" />Sistema</a>
+      }
       @if (acceso.permite('HABITACIONES:VER')) {
         <a routerLink="habitaciones" routerLinkActive="active" ariaCurrentWhenActive="page"
           ><app-icon name="bed" />Habitaciones</a
@@ -29,6 +33,7 @@ import { PermisosUi } from '../../core/services/permisos-ui';
   styles: `
     .maintenance-tabs {
       display: flex;
+      flex-wrap: wrap;
       gap: 4px;
       padding: 6px;
       background: var(--paper);

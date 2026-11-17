@@ -53,6 +53,12 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'reportes',
+        title: 'Reportes · REBOLSYS',
+        data: { soloGerencia: true },
+        loadComponent: () => import('./features/reportes/reportes').then(m => m.Reportes),
+      },
+      {
         path: "limpieza",
         title: "Informes y habitaciones · REBOLSYS",
         data: { permisos: ["LIMPIEZA:VER_INICIO", "LIMPIEZA:VER_HABITACIONES", "LIMPIEZA:VER_INFORMES", "LIMPIEZA:VER_TICKETS"] },

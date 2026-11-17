@@ -68,7 +68,7 @@
             <td class="contacto"><strong>{{ u.usuario }}</strong></td>
             <td>{{ vinculado ? vinculado.nombres + ' ' + vinculado.apellidos : '—' }}</td>
             <td><span class="estado" [class.activo]="u.estado === 'ACTIVO'">{{ u.estado === 'ACTIVO' ? 'Activo' : u.estado === 'BLOQUEADO' ? 'Bloqueado' : 'Inactivo' }}</span></td>
-            <td>{{ u.nombresRoles.join(', ') || 'Sin roles reutilizables' }}</td>
+            <td>{{ u.nombresRoles.join(', ') || 'Sin roles asignados' }}</td>
             <td><div class="opciones">
               @if (sesion.actual()?.gerente && !u.gerente) {
                 <button class="button small" type="button" [disabled]="ocupado()" (click)="editar('editarUsuario', u)">Editar usuario</button>
@@ -86,10 +86,7 @@
 @if (sesion.permite('ROLES:VER')) {
   <section class="panel" aria-labelledby="titulo-roles">
     <header class="tabla-cabecera">
-      <div><h2 id="titulo-roles">Roles reutilizables</h2><p class="muted">Grupos de permisos para asignar a los usuarios</p></div>
-      @if (sesion.actual()?.gerente) {
-        <button class="button primary" type="button" (click)="editar('rol')" [disabled]="ocupado()">Crear rol</button>
-      }
+      <h2 id="titulo-roles">Roles del hospedaje</h2>
     </header>
     <div class="table-scroll" tabindex="0" role="region" aria-labelledby="titulo-roles">
       <table aria-labelledby="titulo-roles">
@@ -101,8 +98,7 @@
             <td>{{ r.usuariosAsignados }}</td>
             <td><div class="opciones">
               @if (sesion.actual()?.gerente && !r.protegido) {
-                <button class="button small" type="button" [disabled]="ocupado()" (click)="editar('rol', undefined, r)">Editar</button>
-                <button class="button small danger" type="button" (click)="eliminarRol(r)" [disabled]="ocupado() || r.usuariosAsignados > 0" [attr.title]="r.usuariosAsignados > 0 ? 'Retira las asignaciones primero' : null">Eliminar</button>
+                <button class="button small" type="button" [disabled]="ocupado()" (click)="editar('rol', undefined, r)">Editar permisos</button>
               } @else { <span class="muted">{{ r.protegido ? 'Rol protegido' : 'Solo lectura' }}</span> }
             </div></td>
           </tr>
@@ -118,7 +114,7 @@
       <header class="editor-cabecera">
         <h2 id="titulo-editor-accesos">
           {{ actual === 'empleado' ? (idEdicion === null ? 'Nuevo empleado' : 'Editar empleado')
-            : actual === 'rol' ? (idEdicion === null ? 'Nuevo rol' : 'Editar rol') : actual === 'usuario' ? 'Crear usuario' : 'Editar usuario' }}
+            : actual === 'rol' ? 'Editar permisos de ' + nombre : actual === 'usuario' ? 'Crear usuario' : 'Editar usuario' }}
         </h2>
         <button class="icon-button" type="button" aria-label="Cerrar formulario" (click)="cerrarEditor()" [disabled]="ocupado()">
           <app-icon name="close" />
@@ -166,11 +162,12 @@
                   </select>
                 </label>
               }
-              <label>{{ actual === 'rol' ? 'Nombre del rol' : 'Usuario o correo de acceso' }}
-                <input name="nombre" [(ngModel)]="nombre" required [minlength]="actual === 'rol' ? 2 : 3"
-                  [pattern]="actual === 'rol' ? '[a-zA-Z0-9_-]{2,30}' : '[a-zA-Z0-9][a-zA-Z0-9._@+\\-]{2,49}'"
-                  [maxlength]="actual === 'rol' ? 30 : 50" />
-              </label>
+              @if (actual !== 'rol') {
+                <label>Usuario o correo de acceso
+                  <input name="nombre" [(ngModel)]="nombre" required minlength="3"
+                    pattern="[a-zA-Z0-9][a-zA-Z0-9._@+\-]{2,49}" maxlength="50" />
+                </label>
+              }
             </div>
             @if (actual !== 'rol') {
               <fieldset>

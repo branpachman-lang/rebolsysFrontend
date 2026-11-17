@@ -6,6 +6,12 @@ export const CONFIGURACIONES_ROUTES: Routes = [
     children: [
       { path: "", pathMatch: "full", redirectTo: "habitaciones" },
       {
+        path: 'sistema',
+        title: 'Configuración del sistema · REBOLSYS',
+        data: { soloGerencia: true },
+        loadComponent: () => import('./sistema/sistema').then(m => m.Sistema),
+      },
+      {
         path: "habitaciones",
         data: { permisos: ["HABITACIONES:VER"] },
         loadComponent: () => import("../mantenimiento/pages/habitaciones/habitaciones").then((m) => m.HabitacionMantenimiento),

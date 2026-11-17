@@ -1,0 +1,3 @@
+.marca { display: flex; align-items: center; gap: .75rem; }
+.marca img { object-fit: contain; }
+.marca span { display: block; font-size: .85em; }

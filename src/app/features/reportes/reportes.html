@@ -1,0 +1,184 @@
+<div class="page-heading no-print"><h2>Reportes</h2></div>
+<nav class="opciones no-print" aria-label="Tipos de reporte">
+  @for (reporte of reportes; track reporte.id) {
+    <button class="button" type="button" [class.primary]="vista() === reporte.id"
+      [attr.aria-pressed]="vista() === reporte.id" (click)="seleccionar(reporte.id)">{{ reporte.titulo }}</button>
+  }
+</nav>
+
+<form class="panel filtros no-print" [formGroup]="form" (ngSubmit)="aplicar()">
+  @if (!vista().startsWith('inventario/')) {
+    <label class="field">Desde<input type="date" formControlName="desde" /></label>
+    <label class="field">Hasta<input type="date" formControlName="hasta" /></label>
+  }
+  @if (vista() === 'incidencias' || vista() === 'inventario/mobiliario') {
+    <label class="field">Habitación<input formControlName="habitacion" maxlength="10" placeholder="Número de cuarto" /></label>
+  }
+  @if (vista() === 'incidencias') {
+    <label class="field">Estado del informe
+      <select formControlName="estado">
+        <option value="">Todos</option><option value="POR_APROBAR">Por aprobar</option>
+        <option value="APROBADO">Aprobado</option><option value="INVALIDADO">Invalidado</option>
+      </select>
+    </label>
+  }
+  @if (vista() === 'cierres-caja') {
+    <label class="field">Usuario<input formControlName="usuario" maxlength="50" /></label>
+  }
+  @if (vista().startsWith('inventario/')) {
+    <label class="field">Buscar<input formControlName="buscar" maxlength="100" placeholder="Nombre o categoría" /></label>
+  }
+  @if (vista() === 'inventario/productos') {
+    <label class="opcion-check"><input type="checkbox" formControlName="stockBajo" />Solo stock bajo</label>
+  }
+  <div class="opciones">
+    <button class="button primary" type="submit">Aplicar filtros</button>
+    <button class="button" type="button" (click)="limpiar()">Limpiar</button>
+  </div>
+  @if (errorRango()) { <p class="error-box" role="alert">{{ errorRango() }}</p> }
+</form>
+@if (cargando()) {
+  <p class="loading-state" role="status">Cargando reporte…</p>
+} @else if (error()) {
+  <div class="error-box" role="alert">{{ error() }}</div>
+  <button class="button" type="button" (click)="consultar(0)">Reintentar</button>
+} @else if (resultado(); as reporte) {
+  <section class="panel resultado" aria-label="Resultado del reporte">
+    <div class="cabecera">
+      <div>
+        <app-marca-hospedaje />
+        @for (opcion of reportes; track opcion.id) {
+          @if (opcion.id === vista()) { <h3>{{ opcion.titulo }}</h3> }
+        }
+        @if (!vista().startsWith('inventario/')) {
+          <p class="muted">{{ (aplicados().desde | date:'dd/MM/yyyy') || 'Desde el inicio' }}
+            · {{ (aplicados().hasta | date:'dd/MM/yyyy') || 'Sin límite final' }}</p>
+        }
+      </div>
+      <button class="button no-print" type="button" (click)="imprimir()">Imprimir vista</button>
+    </div>
+    @switch (reporte.vista) {
+      @case ('incidencias') {
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Informe</th><th>Habitación</th><th>Fecha</th><th>Estado</th><th>Ítem</th><th>Condición</th><th>Observación</th><th>Ticket</th></tr></thead>
+            <tbody>
+              @for (fila of reporte.datos.filas; track $index) {
+                <tr><th scope="row"><button class="button small no-print" type="button" (click)="verInforme(fila.idInforme)">INF-{{ fila.idInforme }}</button>
+                    <span class="solo-impresion">INF-{{ fila.idInforme }}</span></th><td>{{ fila.habitacion }}</td>
+                  <td>{{ fila.fecha | date:'dd/MM/yyyy HH:mm' }}</td><td>{{ etiqueta(fila.estadoInforme) }}</td>
+                  <td>{{ fila.mueble }}</td><td>{{ etiqueta(fila.condicion) }}</td><td>{{ fila.observacion || '—' }}</td>
+                  <td>{{ fila.idTicket ? 'TKT-' + fila.idTicket + ' · ' + etiqueta(fila.estadoTicket) : 'Sin ticket' }}</td></tr>
+              } @empty { <tr><td colspan="8">No hay incidencias para los filtros aplicados.</td></tr> }
+            </tbody>
+          </table>
+        </div>
+      }
+      @case ('financiero') {
+        <dl class="totales">
+          <div><dt>Cobros de reservas</dt><dd>{{ reporte.datos.cobrosReservas | currency:'PEN':'S/ ' }}</dd></div>
+          <div><dt>Cobros de ventas</dt><dd>{{ reporte.datos.cobrosVentas | currency:'PEN':'S/ ' }}</dd></div>
+          <div><dt>Ingresos manuales</dt><dd>{{ reporte.datos.ingresosManuales | currency:'PEN':'S/ ' }}</dd></div>
+          <div><dt>Egresos</dt><dd>{{ reporte.datos.egresos | currency:'PEN':'S/ ' }}</dd></div>
+          <div><dt>Saldo neto</dt><dd>{{ reporte.datos.neto | currency:'PEN':'S/ ' }}</dd></div>
+        </dl>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Concepto</th><th>Medio de pago</th><th class="numero">Importe</th></tr></thead>
+            <tbody>
+              @for (fila of reporte.datos.filas; track fila.concepto + fila.medioPago) {
+                <tr><th scope="row">{{ etiqueta(fila.concepto) }}</th><td>{{ fila.medioPago }}</td>
+                  <td class="numero">{{ fila.monto | currency:'PEN':'S/ ' }}</td></tr>
+              } @empty { <tr><td colspan="3">No hay movimientos en el periodo seleccionado.</td></tr> }
+            </tbody>
+          </table>
+        </div>
+      }
+      @case ('cierres-caja') {
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Turno</th><th>Usuario</th><th>Apertura</th><th>Cierre</th><th>Medio</th>
+              <th class="numero">Esperado</th><th class="numero">Declarado</th><th class="numero">Diferencia</th></tr></thead>
+            <tbody>
+              @for (fila of reporte.datos.filas; track fila.idTurno + '/' + fila.medioPago) {
+                <tr><th scope="row">#{{ fila.idTurno }}</th><td>{{ fila.usuario }}</td>
+                  <td>{{ fila.apertura | date:'dd/MM/yyyy HH:mm' }}</td><td>{{ fila.cierre | date:'dd/MM/yyyy HH:mm' }}</td>
+                  <td>{{ fila.medioPago || 'Sin arqueo' }}</td>
+                  <td class="numero">{{ (fila.esperado | currency:'PEN':'S/ ') || '—' }}</td>
+                  <td class="numero">{{ (fila.declarado | currency:'PEN':'S/ ') || '—' }}</td>
+                  <td class="numero" [class.alerta]="fila.diferencia !== null && fila.diferencia !== 0">{{ (fila.diferencia | currency:'PEN':'S/ ') || '—' }}</td></tr>
+              } @empty { <tr><td colspan="8">No hay turnos cerrados para los filtros aplicados.</td></tr> }
+            </tbody>
+          </table>
+        </div>
+      }
+      @case ('inventario/productos') {
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Producto</th><th>Categoría</th><th>Estado</th><th class="numero">Stock</th><th class="numero">Mínimo</th><th>Reposición</th></tr></thead>
+            <tbody>
+              @for (fila of reporte.datos.filas; track fila.id) {
+                <tr><th scope="row">{{ fila.producto }}</th><td>{{ fila.categoria }}</td><td>{{ etiqueta(fila.estado) }}</td>
+                  <td class="numero">{{ fila.stock }}</td><td class="numero">{{ fila.minimo }}</td>
+                  <td>
+                    @if (fila.estado === 'ACTIVO' && fila.stock <= fila.minimo) { <strong class="alerta">Stock bajo</strong> }
+                    @else { — }
+                  </td></tr>
+              } @empty { <tr><td colspan="6">No hay productos para los filtros aplicados.</td></tr> }
+            </tbody>
+          </table>
+        </div>
+      }
+      @case ('inventario/mobiliario') {
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Mueble</th><th>Tipo</th><th>Habitación</th><th>Estado</th><th>Condición</th></tr></thead>
+            <tbody>
+              @for (fila of reporte.datos.filas; track fila.id) {
+                <tr><th scope="row">{{ fila.mueble }}</th><td>{{ fila.tipo }}</td><td>{{ fila.habitacion || 'Sin asignar' }}</td>
+                  <td>{{ etiqueta(fila.estado) }}</td><td>{{ etiqueta(fila.condicion) }}</td></tr>
+              } @empty { <tr><td colspan="5">No hay muebles para los filtros aplicados.</td></tr> }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+    @if (reporte.vista !== 'financiero' && (reporte.datos.pagina > 0 || reporte.datos.haySiguiente)) {
+      <div class="opciones paginacion no-print">
+        <button class="button" type="button" [disabled]="reporte.datos.pagina === 0" (click)="consultar(reporte.datos.pagina - 1)">Anterior</button>
+        <span>Página {{ reporte.datos.pagina + 1 }}</span>
+        <button class="button" type="button" [disabled]="!reporte.datos.haySiguiente" (click)="consultar(reporte.datos.pagina + 1)">Siguiente</button>
+      </div>
+    }
+  </section>
+}
+@if (informeAbierto(); as id) {
+  <div class="modal-backdrop no-print">
+    <section class="modal wide-modal" appDialog (dialogEscape)="cerrarInforme()" role="dialog" aria-modal="true" aria-labelledby="titulo-informe-incidencia">
+      <header class="cabecera">
+        <h3 id="titulo-informe-incidencia">Informe INF-{{ id }}</h3>
+        <button class="button" type="button" (click)="cerrarInforme()">Cerrar</button>
+      </header>
+      @if (errorInforme()) {
+        <p class="error-box" role="alert">{{ errorInforme() }}</p>
+        <button class="button" type="button" (click)="verInforme(id)">Reintentar</button>
+      } @else if (detalle(); as datos) {
+        <p>Habitación {{ datos.informe.numeroHabitacion }} · {{ etiqueta(datos.informe.estado) }}</p>
+        @if (datos.observaciones) { <p>{{ datos.observaciones }}</p> }
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Ítem</th><th>Estado encontrado</th><th>Observación</th><th>Ticket</th></tr></thead>
+            <tbody>
+              @for (item of datos.items; track item.idDetalleInforme) {
+                <tr><th scope="row">{{ item.item }}</th><td>{{ etiqueta(item.estadoEncontrado) }}</td>
+                  <td>{{ item.observaciones || '—' }}</td><td>{{ item.idTicket ? 'TKT-' + item.idTicket : '—' }}</td></tr>
+              } @empty { <tr><td colspan="4">El informe no contiene ítems.</td></tr> }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <p class="loading-state" role="status">Cargando informe…</p>
+      }
+    </section>
+  </div>
+}

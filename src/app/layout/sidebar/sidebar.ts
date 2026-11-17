@@ -9,6 +9,7 @@ import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { filter } from "rxjs";
 import { MENU, MenuItem } from "../../core/config/menu";
 import { SesionService } from "../../core/services/sesion-service";
+import { PermisosUi } from '../../core/services/permisos-ui';
 import { Icon } from "../../shared/components/icono/icono";
 
 @Component({
@@ -19,6 +20,7 @@ import { Icon } from "../../shared/components/icono/icono";
 })
 export class Sidebar {
   private readonly sesion = inject(SesionService);
+  private readonly acceso = inject(PermisosUi);
   protected readonly menu = computed(() => MENU.flatMap(item => {
     if (!item.hijos) {
       if (!this.visible(item)) return [];
@@ -39,6 +41,7 @@ export class Sidebar {
   }
   private visible(item: MenuItem) {
     return (!item.soloActiva || this.sesion.actual()?.modo === "ACTIVA")
+      && (!item.soloGerencia || this.acceso.esGerente())
       && (!item.permisos || this.sesion.permite(...item.permisos));
   }
   constructor() {

@@ -1,0 +1,102 @@
+<div class="page-heading">
+  <h2>Configuración del sistema</h2>
+</div>
+@if (error()) { <div class="error-box" role="alert">{{ error() }}</div> }
+@if (aviso()) { <p class="inline-note" role="status">{{ aviso() }}</p> }
+@if (cargando()) {
+  <p class="loading-state" role="status">Cargando configuración…</p>
+} @else if (!listo()) {
+  <button class="button" type="button" (click)="cargar()">Reintentar</button>
+} @else {
+  <nav class="opciones" aria-label="Configuración del sistema">
+    <button class="button" type="button" [class.primary]="seccion() === 'hospedaje'" [attr.aria-pressed]="seccion() === 'hospedaje'"
+      [disabled]="guardando()" (click)="mostrar('hospedaje')">Hospedaje</button>
+    <button class="button" type="button" [class.primary]="seccion() === 'seguridad'" [attr.aria-pressed]="seccion() === 'seguridad'"
+      [disabled]="guardando()" (click)="mostrar('seguridad')">Políticas de seguridad</button>
+    <button class="button" type="button" [class.primary]="seccion() === 'comerciales'" [attr.aria-pressed]="seccion() === 'comerciales'"
+      [disabled]="guardando()" (click)="mostrar('comerciales')">Parámetros comerciales</button>
+  </nav>
+
+  @switch (seccion()) {
+    @case ('hospedaje') {
+      <section class="panel contenido">
+        <h3>Datos del hospedaje</h3>
+        <form [formGroup]="hospedaje" (ngSubmit)="guardarHospedaje()">
+          <div class="campos">
+            <label class="field">Nombre<input formControlName="nombre" maxlength="150" /></label>
+            <label class="field">RUC<input formControlName="ruc" maxlength="11" inputmode="numeric" />
+              <small>11 dígitos</small>
+            </label>
+            <label class="field completo">Dirección<input formControlName="direccion" maxlength="200" /></label>
+          </div>
+          <button class="button primary" type="submit" [disabled]="guardando() || hospedaje.invalid">Guardar datos</button>
+        </form>
+      </section>
+      <section class="panel contenido">
+        <h3>Logotipo institucional</h3>
+        @if (vistaLogo() || rutaLogo(marca()); as logo) {
+          <img class="logo" [src]="logo" [alt]="vistaLogo() ? 'Vista previa del logo' : 'Logotipo actual del hospedaje'" />
+        }
+        @if (marca()?.nombre) {
+          <label class="field">Seleccionar imagen
+            <input #archivo type="file" accept="image/jpeg,image/png" [disabled]="guardando()" (change)="seleccionarLogo(archivo)" />
+            <small>JPEG o PNG de hasta 5 MB</small>
+          </label>
+          <button class="button primary" type="button" [disabled]="guardando() || !elegido()" (click)="guardarLogo(archivo)">Guardar logo</button>
+        } @else {
+          <p class="muted">Guarda los datos del hospedaje para habilitar la carga del logo.</p>
+        }
+      </section>
+    }
+    @case ('seguridad') {
+      <section class="panel contenido">
+        <h3>Sesión e inicio de sesión</h3>
+        <form [formGroup]="politica" (ngSubmit)="guardarPolitica()">
+          <div class="campos">
+            <label class="field">Inactividad máxima en minutos
+              <input type="number" min="1" max="1440" step="1" formControlName="minutosInactividad" />
+              <small>Se aplica al iniciar sesión.</small>
+            </label>
+            <label class="field">Límite de intentos fallidos
+              <input type="number" min="1" max="5" step="1" formControlName="intentosFallidos" />
+              <small>De 1 a 5 intentos. El bloqueo dura 15 minutos.</small>
+            </label>
+          </div>
+          <button class="button primary" type="submit" [disabled]="guardando() || politica.invalid">Guardar política</button>
+        </form>
+      </section>
+    }
+    @case ('comerciales') {
+      <section class="panel contenido">
+        <h3>Tarifas y capacidad por tipo de habitación</h3>
+        <p class="muted">La tarifa propia de una habitación prevalece sobre el precio base de su tipo.</p>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th scope="col">Tipo</th><th scope="col">Máximo de huéspedes</th><th scope="col">Precio base por noche</th><th scope="col">Acción</th></tr></thead>
+            <tbody>
+              @for (tipo of tipos(); track tipo.idTipoHabitacion) {
+                <tr><th scope="row">{{ tipo.nombreTipo }}</th><td>{{ tipo.capacidadMax }}</td>
+                  <td>{{ tipo.precioBase | currency:'PEN':'S/ ' }}</td>
+                  <td><button class="button small" type="button" [disabled]="guardando()" (click)="editar(tipo)">Editar</button></td>
+                </tr>
+              } @empty { <tr><td colspan="4">No hay tipos de habitación registrados.</td></tr> }
+            </tbody>
+          </table>
+        </div>
+        @if (seleccionado(); as tipo) {
+          <form [formGroup]="comercial" (ngSubmit)="guardarComercial()">
+            <h4>{{ tipo.nombreTipo }}</h4>
+            <div class="campos">
+              <label class="field">Máximo de huéspedes<input type="number" min="1" max="99" step="1" formControlName="capacidadMax" /></label>
+              <label class="field">Precio base (S/)<input type="number" min="0" step=".01" formControlName="precioBase" /></label>
+            </div>
+            <div class="opciones">
+              <button class="button primary" type="submit" [disabled]="guardando() || comercial.invalid">Guardar cambios</button>
+              <button class="button" type="button" [disabled]="guardando()" (click)="seleccionado.set(null)">Cancelar</button>
+            </div>
+          </form>
+        }
+      </section>
+    }
+  }
+}

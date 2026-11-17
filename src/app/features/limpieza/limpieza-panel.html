@@ -95,7 +95,7 @@
                   <td>
                     @if (item.idTicket && permite('VER_TICKETS')) {
                       <button class="button small" [disabled]="ocupado()" (click)="verTicket(item.idTicket)">Ver ticket</button>
-                    } @else if (item.puedeCrearTicket && permite('CREAR_TICKET')) {
+                    } @else if (item.puedeCrearTicket && puedeMantenimiento('CREAR_TICKET')) {
                       <button class="button small primary" [disabled]="ocupado()" (click)="abrirNuevoTicket(p.datos, item)">Atender incidencia</button>
                     } @else { {{ item.idTicket ? 'Registrado' : '—' }} }
                   </td>
@@ -110,10 +110,11 @@
             @if (p.datos.informe.puedeEditar && permite('EDITAR_INFORME') && p.datos.items.length > 0) {
               <button class="button" [disabled]="ocupado()" (click)="abrirEditarInforme(p.datos.informe.idInformeRevision)">Editar</button>
             }
-            @if (p.datos.informe.puedeEliminar && permite('ELIMINAR_INFORME')) {
+            @if (p.datos.informe.puedeEliminar && permite('ELIMINAR_INFORME')
+                && (!p.datos.informe.tieneTickets || puedeMantenimiento('ELIMINAR_TICKET'))) {
               <button class="button danger" [disabled]="ocupado()" (click)="confirmarEliminarInforme(p.datos.informe)">Eliminar</button>
             }
-            @if (p.datos.informe.estado === 'POR_APROBAR' && permite('APROBAR_INFORME')) {
+            @if (p.datos.informe.estado === 'POR_APROBAR' && puedeMantenimiento('APROBAR_INFORME')) {
               <button class="button primary" [disabled]="ocupado() || !p.datos.informe.puedeAprobar"
                 (click)="aprobar(p.datos.informe.idInformeRevision)">Aprobar informe</button>
             }
@@ -208,10 +209,10 @@
             @if (permite('VER_INFORMES')) {
               <button class="button" [disabled]="ocupado()" (click)="verInforme(p.datos.ticket.idInformeRevision)">Ver informe asociado</button>
             }
-            @if (p.datos.ticket.puedeEditar && permite('EDITAR_TICKET')) {
+            @if (p.datos.ticket.puedeEditar && puedeMantenimiento('EDITAR_TICKET')) {
               <button class="button" [disabled]="ocupado()" (click)="abrirEditarTicket(p.datos.ticket.idTicket)">Editar</button>
             }
-            @if (p.datos.ticket.puedeEliminar && permite('ELIMINAR_TICKET')) {
+            @if (p.datos.ticket.puedeEliminar && puedeMantenimiento('ELIMINAR_TICKET')) {
               <button class="button danger" [disabled]="ocupado()" (click)="confirmarEliminarTicket(p.datos.ticket)">Eliminar</button>
             }
           </div>
@@ -295,7 +296,7 @@
         </form>
       }
       @case ('tickets') {
-        @if (permite('VER_INFORMES') && permite('CREAR_TICKET')) {
+        @if (permite('VER_INFORMES') && puedeMantenimiento('CREAR_TICKET')) {
           <p class="nota-operativa">Los tickets registran incidencias atendidas. Para atender una nueva, abre su informe por aprobar.</p>
           <button class="button small" type="button" (click)="verInformesPorAtender()">Ver informes por atender</button>
         }
@@ -359,7 +360,7 @@
                   <td>{{ i.tieneTickets ? 'Asociados' : '—' }}</td>
                   <td><div class="acciones">
                     <button class="button small" [disabled]="ocupado()" (click)="verInforme(i.idInformeRevision)">
-                      {{ i.incidenciasPendientes && permite('CREAR_TICKET') ? 'Ver y atender' : 'Ver' }}
+                      {{ i.incidenciasPendientes && puedeMantenimiento('CREAR_TICKET') ? 'Ver y atender' : 'Ver' }}
                     </button>
                     @if (permite('EDITAR_INFORME')) {
                       <button class="button small" [disabled]="ocupado() || !i.puedeEditar" (click)="abrirEditarInforme(i.idInformeRevision)">Editar</button>
@@ -384,10 +385,10 @@
                   <td><span [class]="'estado ' + t.estado">{{ texto(t.estado) }}</span></td><td>{{ fecha(t.fechaGeneracion) }}</td>
                   <td><div class="acciones">
                     <button class="button small" [disabled]="ocupado()" (click)="verTicket(t.idTicket)">Ver</button>
-                    @if (permite('EDITAR_TICKET')) {
+                    @if (puedeMantenimiento('EDITAR_TICKET')) {
                       <button class="button small" [disabled]="ocupado() || !t.puedeEditar" (click)="abrirEditarTicket(t.idTicket)">Editar</button>
                     }
-                    @if (permite('ELIMINAR_TICKET')) {
+                    @if (puedeMantenimiento('ELIMINAR_TICKET')) {
                       <button class="button small danger" [disabled]="ocupado() || !t.puedeEliminar" (click)="confirmarEliminarTicket(t)">Eliminar</button>
                     }
                   </div></td>
